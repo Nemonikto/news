@@ -1,30 +1,26 @@
+from turtle import title
 from django.shortcuts import redirect, render, get_object_or_404
 from django.http import Http404, HttpResponse, HttpResponseNotFound
 from django.views.generic import ListView, DetailView, CreateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from rest_framework import generics
 
 from .forms import *
 from .models import *
+from .utils import *
 from .serializers import LaptopSerializer
 
-menu = [{'title': "О сайте", 'url_name':'about'},
-        {'title': "Добавление новости", 'url_name':'add_page'},
-        {'title': "Обратная связь", 'url_name':'contact'},
-        {'title': "Войти", 'url_name':'login'}]
 
-
-class LaptopHome(ListView):
+class LaptopHome(DataMixin, ListView):
     model = Laptop
     template_name = 'laptops/index.html'
     context_object_name = 'posts'
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['menu'] = menu
-        context['title'] = 'Главная страница'
-        context['cat_selected'] = 0
-        return context
+        c_def = self.get_user_context(title="Главная страница")
+        return dict(list(context.items()) + list(c_def.items()))
     
     def get_queryset(self):
         return Laptop.objects.filter(is_published=True)
@@ -34,16 +30,16 @@ def about(request):
     return render(request, 'laptops/about.html', {'menu': menu, 'title': 'О сайте'})
 
 
-class AddPage(CreateView):
+class AddPage(LoginRequiredMixin, DataMixin, CreateView):
     form_class = AddPostForm
     template_name = 'laptops/addpage.html'
     success_url = reverse_lazy('home')
+    login_url = reverse_lazy('home')
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Добавление статьи'
-        context['menu'] = menu
-        return context
+        c_def = self.get_user_context(title="Добавление новости")
+        return dict(list(context.items()) + list(c_def.items()))
 
 
 def contact(request):
@@ -54,7 +50,7 @@ def login(request):
     return HttpResponse("Авторизация")
 
 
-class ShowPost(DetailView):
+class ShowPost(DataMixin, DetailView):
     model = Laptop
     template_name = 'laptops/post.html'
     slug_url_kwarg = 'post_slug'
@@ -62,9 +58,8 @@ class ShowPost(DetailView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = context['post']
-        context['menu'] = menu
-        return context
+        c_def = self.get_user_context(title=context['post'])
+        return dict(list(context.items()) + list(c_def.items()))
 
 
 class LaptopAPIView(generics.ListAPIView):
@@ -72,7 +67,7 @@ class LaptopAPIView(generics.ListAPIView):
     serializer_class = LaptopSerializer
 
 
-class LaptopCategory(ListView):
+class LaptopCategory(DataMixin, ListView):
     model = Laptop
     template_name = 'laptops/index.html'
     context_object_name = 'posts'
@@ -80,10 +75,9 @@ class LaptopCategory(ListView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Категория - ' + str(context['posts'][0].cat)
-        context['menu'] = menu
-        context['cat_selected'] = context['posts'][0].cat_id
-        return context
+        c_def = self.get_user_context(title='Категория - ' + str(context['posts'][0].cat), 
+                                        cat_selected=context['posts'][0].cat_id)
+        return dict(list(context.items()) + list(c_def.items()))
 
     def get_queryset(self):
         return Laptop.objects.filter(cat__slug=self.kwargs['cat_slug'], is_published=True)
