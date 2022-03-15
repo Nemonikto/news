@@ -4,8 +4,7 @@ from django.db.models import Count
 
 menu = [{'title': "О сайте", 'url_name':'about'},
         {'title': "Добавление новости", 'url_name':'add_page'},
-        {'title': "Обратная связь", 'url_name':'contact'},
-        {'title': "Войти", 'url_name':'login'}]
+        {'title': "Обратная связь", 'url_name':'contact'},]
 
 
 class DataMixin:
