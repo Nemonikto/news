@@ -1,6 +1,6 @@
 from django.shortcuts import redirect, render
 from django.http import HttpResponse, HttpResponseNotFound
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, DetailView, CreateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.contrib.auth import logout, login
@@ -24,7 +24,7 @@ class LaptopHome(DataMixin, ListView):
         return dict(list(context.items()) + list(c_def.items()))
     
     def get_queryset(self):
-        return Laptop.objects.filter(is_published=True)
+        return Laptop.objects.filter(is_published=True).select_related('cat')
 
 
 def about(request):
@@ -43,8 +43,19 @@ class AddPage(LoginRequiredMixin, DataMixin, CreateView):
         return dict(list(context.items()) + list(c_def.items()))
 
 
-def contact(request):
-    return HttpResponse("Обратная связь")
+class ContactFormView(DataMixin, FormView):
+    form_class = ContactForm
+    template_name = 'laptops/contact.html'
+    success_url = reverse_lazy('home')
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        c_def = self.get_user_context(title="Обратная связь")
+        return context | c_def
+    
+    def form_valid(self, form):
+        print(form.cleaned_data)
+        return redirect('home')
 
 
 class ShowPost(DataMixin, DetailView):
@@ -72,12 +83,13 @@ class LaptopCategory(DataMixin, ListView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        c_def = self.get_user_context(title='Категория - ' + str(context['posts'][0].cat), 
-                                        cat_selected=context['posts'][0].cat_id)
+        c = Category.objects.get(slug=self.kwargs['cat_slug'])
+        c_def = self.get_user_context(title='Категория - ' + str(c.name), 
+                                        cat_selected=c.pk)
         return dict(list(context.items()) + list(c_def.items()))
 
     def get_queryset(self):
-        return Laptop.objects.filter(cat__slug=self.kwargs['cat_slug'], is_published=True)
+        return Laptop.objects.filter(cat__slug=self.kwargs['cat_slug'], is_published=True).select_related('cat')
 
 
 def page_not_found(request, exception):
