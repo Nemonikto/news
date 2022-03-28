@@ -8,4 +8,7 @@
 {% endif %}
 
 {{post.content|linebreaks}}
+<div class="clear"></div>
+    <p class="link-read-post"><a href="{% url 'update' post.slug %}">Редактировать</a></p>
+    <p class="link-read-post"><a href="{% url 'delete' post.slug %}">Удалить</a></p>
 {% endblock %}

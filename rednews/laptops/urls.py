@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from .views import *
 
@@ -10,7 +10,9 @@ urlpatterns = [
     path('login/', LoginUser.as_view(), name='login'),
     path('logout/', logout_user, name='logout'),
     path('register/', RegisterUser.as_view(), name='register'),
-    path('post/<slug:post_slug>/', ShowPost.as_view(), name='post'),
+    path('post/<slug:slug>/', ShowPost.as_view(), name='post'),
+    path('post/<slug:slug>/update/', UpPost.as_view(), name='update'),
+    path('post/<slug:slug>/delete/', DeletePost.as_view(), name='delete'),
     path('category/<slug:cat_slug>/', LaptopCategory.as_view(), name='category'),
     path('ajax/', LaptopAPIView.as_view(), name='ajax'),
 ]

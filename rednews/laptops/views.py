@@ -1,6 +1,6 @@
-from django.shortcuts import redirect, render
-from django.http import HttpResponse, HttpResponseNotFound
-from django.views.generic import ListView, DetailView, CreateView, FormView
+from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpResponseNotFound
+from django.views.generic import ListView, DetailView, CreateView, FormView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.contrib.auth import logout, login
@@ -61,13 +61,39 @@ class ContactFormView(DataMixin, FormView):
 class ShowPost(DataMixin, DetailView):
     model = Laptop
     template_name = 'laptops/post.html'
-    slug_url_kwarg = 'post_slug'
+    slug_url_kwarg = 'slug'
     context_object_name = 'post'
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
         c_def = self.get_user_context(title=context['post'])
         return dict(list(context.items()) + list(c_def.items()))
+
+
+class UpPost(LoginRequiredMixin, DataMixin, UpdateView):
+    form_class = AddPostForm
+    model = Laptop
+    template_name = 'laptops/update.html'
+    context_object_name = 'post'
+    success_url = reverse_lazy('home')
+    login_url = reverse_lazy('home')
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        c_def = self.get_user_context(title="Редактирование "+ str(context['post']))
+        return context | c_def
+
+
+class DeletePost(LoginRequiredMixin, DataMixin, DeleteView):
+    model = Laptop
+    template_name = 'laptops/delete.html'
+    context_object_name = 'post'
+    success_url = reverse_lazy('home')
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        c_def = self.get_user_context(title="Удаление "+ str(context['post']))
+        return context | c_def
 
 
 class LaptopAPIView(generics.ListAPIView):
