@@ -9,6 +9,8 @@
 
 {{post.content|linebreaks}}
 <div class="clear"></div>
+{% if user.is_superuser %}
     <p class="link-read-post"><a href="{% url 'update' post.slug %}">Редактировать</a></p>
     <p class="link-read-post"><a href="{% url 'delete' post.slug %}">Удалить</a></p>
+{% endif %}
 {% endblock %}

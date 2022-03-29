@@ -89,6 +89,7 @@ class DeletePost(LoginRequiredMixin, DataMixin, DeleteView):
     template_name = 'laptops/delete.html'
     context_object_name = 'post'
     success_url = reverse_lazy('home')
+    login_url = reverse_lazy('home')
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
